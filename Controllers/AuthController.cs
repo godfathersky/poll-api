@@ -35,7 +35,6 @@ namespace PollAPI.Controllers
             CreatePasswordHash(userRequest.Password, out byte[] UserPasswordHash, out byte[] UserPasswordSalt);
 
             String currentTime = DateTime.Now.ToString("HH:mm:ss");
-
             TimeSpan currentTimeToDb = TimeSpan.Parse(currentTime);
 
             user.UserLogin = userRequest.Username;
@@ -49,7 +48,87 @@ namespace PollAPI.Controllers
             return Ok(user);
         }
 
-        private void CreatePasswordHash(string password, out byte[] UserPasswordHash, out byte[] UserPasswordSalt)
+        [HttpGet("{username}")]
+        public async Task<ActionResult<IEnumerable<User>>> GetUser (string username)
+        {
+            var user = await _context.Users.Where(x => x.UserLogin == username).Include(y => y.UserRoles).ToListAsync();
+
+            return user;
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<string>> Login (UserDTO request)
+        {
+            var userGet = await GetUser(request.Username);
+
+            var accUser = userGet.Value.First();
+
+            if (accUser.UserLogin != request.Username)
+            {
+                return BadRequest();
+            }
+
+            if (!VerifyPasswordHash(request.Password, accUser.UserPasswordHash, accUser.UserPasswordSalt))
+            {
+                return BadRequest();
+            }
+
+            //string token = CreateToken(accUser);
+
+            //return token;
+
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("userrole/{id}")]
+        public async Task<ActionResult<List<Role>>> GetUserRoles (int id)
+        {
+            var test = await _context.Roles.Where(x => x.RoleId == id).ToListAsync();
+
+            return test;
+        }
+
+        //private string CreateToken(User user)
+        //{
+        //    List<short> userRolesList = new List<short>();
+        //    var userRoles = user.UserRoles;
+        //    foreach (var x in userRoles)
+        //    {
+        //        userRolesList.Add(x.RoleId);
+        //    }
+        //    List<string> userRoleName = new List<string>();
+        //    foreach (var x in userRolesList)
+        //    {
+        //        var userRoleGet = GetUserRoles(x);
+        //        var userFirstRole = userRoleGet.Result.Value.First().RoleName;
+        //        userRoleName.Add(userFirstRole);
+        //    }
+
+        //    List<Claim> claims = new List<Claim>();
+        //    claims.Add(new Claim(ClaimTypes.Name, user.UserLogin));
+
+        //    foreach (var x in userRoleName)
+        //    {
+        //        claims.Add(new Claim(ClaimTypes.Role, x.ToString()));
+        //    }
+
+        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+
+        //    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+        //    var token = new JwtSecurityToken(
+        //        claims: claims,
+        //        expires: DateTime.Now.AddMinutes(5),
+        //        signingCredentials: creds
+        //        );
+
+        //    var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+
+        //    return jwt;
+        //}
+
+        private void CreatePasswordHash (string password, out byte[] UserPasswordHash, out byte[] UserPasswordSalt)
         {
             using (var hmac = new HMACSHA512())
             {
@@ -58,7 +137,7 @@ namespace PollAPI.Controllers
             }
         }
 
-        private bool VerifyPasswordHash(string password, byte[] UserPasswordHash, byte[] UserPasswordSalt)
+        private bool VerifyPasswordHash (string password, byte[] UserPasswordHash, byte[] UserPasswordSalt)
         {
             using (var hmac = new HMACSHA512(UserPasswordSalt))
             {
@@ -66,89 +145,5 @@ namespace PollAPI.Controllers
                 return computedHash.SequenceEqual(UserPasswordHash);
             }
         }
-
-        //// GET: api/Auth
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<User>>> GetUsers()
-        //{
-        //    return await _context.Users.ToListAsync();
-        //}
-
-        //// GET: api/Auth/5
-        //[HttpGet("{id}")]
-        //public async Task<ActionResult<User>> GetUser(int id)
-        //{
-        //    var user = await _context.Users.FindAsync(id);
-
-        //    if (user == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return user;
-        //}
-
-        //// PUT: api/Auth/5
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutUser(int id, User user)
-        //{
-        //    if (id != user.UserId)
-        //    {
-        //        return BadRequest();
-        //    }
-
-        //    _context.Entry(user).State = EntityState.Modified;
-
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!UserExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return NoContent();
-        //}
-
-        //// POST: api/Auth
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPost]
-        //public async Task<ActionResult<User>> PostUser(User user)
-        //{
-        //    _context.Users.Add(user);
-        //    await _context.SaveChangesAsync();
-
-        //    return CreatedAtAction("GetUser", new { id = user.UserId }, user);
-        //}
-
-        //// DELETE: api/Auth/5
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteUser(int id)
-        //{
-        //    var user = await _context.Users.FindAsync(id);
-        //    if (user == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    _context.Users.Remove(user);
-        //    await _context.SaveChangesAsync();
-
-        //    return NoContent();
-        //}
-
-        //private bool UserExists(int id)
-        //{
-        //    return _context.Users.Any(e => e.UserId == id);
-        //}
     }
 }
