@@ -29,18 +29,19 @@ namespace PollAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<User>> Register (UserDTO userRequest)
+        public async Task<ActionResult<User>> Register (UserRegister userRegRequest)
         {
             User user = new User();
-            CreatePasswordHash(userRequest.Password, out byte[] UserPasswordHash, out byte[] UserPasswordSalt);
+            CreatePasswordHash(userRegRequest.Password, out byte[] UserPasswordHash, out byte[] UserPasswordSalt);
 
             String currentTime = DateTime.Now.ToString("HH:mm:ss");
             TimeSpan currentTimeToDb = TimeSpan.Parse(currentTime);
 
-            user.UserLogin = userRequest.Username;
+            user.UserLogin = userRegRequest.Username;
             user.UserPasswordHash = UserPasswordHash;
             user.UserPasswordSalt = UserPasswordSalt;
             user.UserAddTime = currentTimeToDb;
+            user.UserEmail = userRegRequest.Email;
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -57,18 +58,18 @@ namespace PollAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<string>> Login (UserDTO request)
+        public async Task<ActionResult<string>> Login (UserLogin UserLogRequest)
         {
-            var userGet = await GetUser(request.Username);
+            var userGet = await GetUser(UserLogRequest.Username);
 
             var accUser = userGet.Value.First();
 
-            if (accUser.UserLogin != request.Username)
+            if (accUser.UserLogin != UserLogRequest.Username)
             {
                 return BadRequest();
             }
 
-            if (!VerifyPasswordHash(request.Password, accUser.UserPasswordHash, accUser.UserPasswordSalt))
+            if (!VerifyPasswordHash(UserLogRequest.Password, accUser.UserPasswordHash, accUser.UserPasswordSalt))
             {
                 return BadRequest();
             }

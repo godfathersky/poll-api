@@ -12,6 +12,7 @@ namespace PollAPI.Models
 
         public int UserId { get; set; }
         public string UserLogin { get; set; } = null!;
+        public string UserEmail { get; set; } = null!;
         public byte[] UserPasswordHash { get; set; } = null!;
         public byte[] UserPasswordSalt { get; set; } = null!;
         public TimeSpan UserAddTime { get; set; }

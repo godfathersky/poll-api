@@ -67,6 +67,11 @@ namespace PollAPI.Models
                     .HasColumnType("time(2)")
                     .HasColumnName("userAddTime");
 
+                entity.Property(e => e.UserEmail)
+                    .HasMaxLength(60)
+                    .IsUnicode(false)
+                    .HasColumnName("userEmail");
+
                 entity.Property(e => e.UserLogin)
                     .HasMaxLength(20)
                     .IsUnicode(false)
