@@ -5,8 +5,10 @@ namespace PollAPI.Models
 {
     public partial class Poll
     {
-        public int PollId { get; set; }
-        public int PollNumber { get; set; }
-        public string PollContent { get; set; } = null!;
+        public int Id { get; set; }
+        public string PollId { get; set; } = null!;
+        public string PollTitle { get; set; } = null!;
+        public string PollType { get; set; } = null!;
+        public string PollAnswer { get; set; } = null!;
     }
 }

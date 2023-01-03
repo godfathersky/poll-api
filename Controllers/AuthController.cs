@@ -52,7 +52,7 @@ namespace PollAPI.Controllers
         [HttpGet("{username}")]
         public async Task<ActionResult<IEnumerable<User>>> GetUser (string username)
         {
-            var user = await _context.Users.Where(x => x.UserLogin == username).Include(y => y.UserRoles).ToListAsync();
+            var user = await _context.Users.Where(x => x.UserLogin == username).ToListAsync();
 
             return user;
         }
@@ -74,60 +74,58 @@ namespace PollAPI.Controllers
                 return BadRequest();
             }
 
-            //string token = CreateToken(accUser);
+            string token = CreateToken(accUser);
 
-            //return token;
-
-            return Ok();
+            return token;
         }
 
         [HttpGet]
         [Route("userrole/{id}")]
-        public async Task<ActionResult<List<Role>>> GetUserRoles (int id)
+        public async Task<ActionResult<List<Role>>> GetUserRoles(int id)
         {
-            var test = await _context.Roles.Where(x => x.RoleId == id).ToListAsync();
+            var role = await _context.Roles.Where(x => x.RoleId == id).ToListAsync();
 
-            return test;
+            return role;
         }
 
-        //private string CreateToken(User user)
-        //{
-        //    List<short> userRolesList = new List<short>();
-        //    var userRoles = user.UserRoles;
-        //    foreach (var x in userRoles)
-        //    {
-        //        userRolesList.Add(x.RoleId);
-        //    }
-        //    List<string> userRoleName = new List<string>();
-        //    foreach (var x in userRolesList)
-        //    {
-        //        var userRoleGet = GetUserRoles(x);
-        //        var userFirstRole = userRoleGet.Result.Value.First().RoleName;
-        //        userRoleName.Add(userFirstRole);
-        //    }
+        private string CreateToken(User user)
+        {
+            List<int> userRolesList = new List<int>();
+            var userRoles = user.UserRoles;
+            foreach (var x in userRoles)
+            {
+                userRolesList.Add(x.RoleId);
+            }
+            List<string> userRoleName = new List<string>();
+            foreach (var x in userRolesList)
+            {
+                var userRoleGet = GetUserRoles(x);
+                var userFirstRole = userRoleGet.Result.Value.First().RoleName;
+                userRoleName.Add(userFirstRole);
+            }
 
-        //    List<Claim> claims = new List<Claim>();
-        //    claims.Add(new Claim(ClaimTypes.Name, user.UserLogin));
+            List<Claim> claims = new List<Claim>();
+            claims.Add(new Claim(ClaimTypes.Name, user.UserLogin));
 
-        //    foreach (var x in userRoleName)
-        //    {
-        //        claims.Add(new Claim(ClaimTypes.Role, x.ToString()));
-        //    }
+            foreach (var x in userRoleName)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, x.ToString()));
+            }
 
-        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
 
-        //    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
-        //    var token = new JwtSecurityToken(
-        //        claims: claims,
-        //        expires: DateTime.Now.AddMinutes(5),
-        //        signingCredentials: creds
-        //        );
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(5),
+                signingCredentials: creds
+                );
 
-        //    var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-        //    return jwt;
-        //}
+            return jwt;
+        }
 
         private void CreatePasswordHash (string password, out byte[] UserPasswordHash, out byte[] UserPasswordSalt)
         {

@@ -36,13 +36,23 @@ namespace PollAPI.Models
             {
                 entity.ToTable("Poll");
 
-                entity.Property(e => e.PollId).HasColumnName("pollId");
-
-                entity.Property(e => e.PollContent)
+                entity.Property(e => e.PollAnswer)
                     .HasColumnType("text")
-                    .HasColumnName("pollContent");
+                    .HasColumnName("pollAnswer");
 
-                entity.Property(e => e.PollNumber).HasColumnName("pollNumber");
+                entity.Property(e => e.PollId)
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .HasColumnName("pollId");
+
+                entity.Property(e => e.PollTitle)
+                    .HasMaxLength(60)
+                    .IsUnicode(false)
+                    .HasColumnName("pollTitle");
+
+                entity.Property(e => e.PollType)
+                    .HasColumnType("text")
+                    .HasColumnName("pollType");
             });
 
             modelBuilder.Entity<Role>(entity =>
@@ -52,7 +62,7 @@ namespace PollAPI.Models
                 entity.Property(e => e.RoleId).HasColumnName("roleId");
 
                 entity.Property(e => e.RoleName)
-                    .HasMaxLength(20)
+                    .HasMaxLength(50)
                     .IsUnicode(false)
                     .HasColumnName("roleName");
             });
@@ -90,13 +100,9 @@ namespace PollAPI.Models
 
             modelBuilder.Entity<UserRole>(entity =>
             {
-                entity.HasKey(e => new { e.UserRoleId, e.UserId, e.RoleId });
+                entity.HasKey(e => new { e.Id, e.UserId, e.RoleId });
 
                 entity.ToTable("UserRole");
-
-                entity.Property(e => e.UserRoleId)
-                    .ValueGeneratedOnAdd()
-                    .HasColumnName("userRoleId");
 
                 entity.Property(e => e.UserId).HasColumnName("userId");
 

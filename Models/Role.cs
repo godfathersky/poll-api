@@ -10,7 +10,7 @@ namespace PollAPI.Models
             UserRoles = new HashSet<UserRole>();
         }
 
-        public short RoleId { get; set; }
+        public int RoleId { get; set; }
         public string RoleName { get; set; } = null!;
 
         public virtual ICollection<UserRole> UserRoles { get; set; }
